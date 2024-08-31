@@ -7,6 +7,8 @@ pipeline {
     agent any
     parameters {
         choice(name: 'action', choices:'create\ndelete', description: 'Select create or destroy')
+        string(name:'DOCKER_HUB_USERNAME',defaultValue:'geoffreyxiao', description:'Docker Hub Username')
+        string(name:'DOCKER_IMAGE_NAME',defaultValue:'youtube-clone-app', description:'Docker Image Name')
     }
     tools{
         jdk 'jdk17'
@@ -61,6 +63,35 @@ pipeline {
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
             }
         }
+        stage('docker build'){
+            when {expression{params.action=='create'}}
+            steps{
+                script{
+                    def dockerHubUsername = "${params.DOCKER_HUB_USERNAME}"
+                    def dockerImageName = "${params.DOCKER_IMAGE_NAME}"
+                    dockerBuild(dockerHubUsername, dockerImageName)
+                }
+            }
+        }
+        stage('Trivy Image Scan'){
+            when {expression{params.action=='create'}}
+            steps{
+                trivyImage()
+            }
+        }
+        stage('Run Container'){
+            when {expression{params.action=='create'}}
+            steps{
+                runContainer()
+            }
+        }
+        stage('Delete Container'){
+            when {expression{params.action=='delete'}}
+            steps{
+                deleteContainer()
+            }
+        }
+    }
     }
     post{
         always{

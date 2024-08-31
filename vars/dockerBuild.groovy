@@ -5,3 +5,4 @@ def call(String dockerHubUsername, String dockerImageName) {
   withDockerRegistry([credentialsId: 'docker',url: "https://index.docker.io/v1/"]) {
     sh "docker push ${dockerHubUsername}/${dockerImageName}:latest"
 }
+}
