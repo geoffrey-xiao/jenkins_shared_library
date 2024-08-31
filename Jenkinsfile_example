@@ -1,0 +1,63 @@
+@Library('jenkins_shared_library')
+def COLOR_MAP = [
+    'FAILURE':'danger',
+    'SUCCESS':'good'
+]
+pipeline {
+    agent any
+    parameters {
+        choice(name: 'action', choices:'create\ndelete', description: 'Select create or destroy')
+    }
+    tools{
+        jdk 'jdk17'
+        nodejs 'nodejs16'
+    }
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('clean workspace'){
+            steps{
+                clearWorkspace()
+            }
+        }
+        stage('checkout from Git'){
+            steps{
+                checkoutGit('https://github.com/Aj7Ay/Youtube-clone-app.git',"main")
+            }
+        }
+        stage('sonarqube Analysis'){
+            when { expression { params.action == 'create'}}
+                steps{
+                    sonarqubeAnalysis()
+                }
+        }
+        stage('sonarqube QualitGate'){
+            when{ expression {params.action=='create'}}
+                steps{
+                    script{
+                        def credentialId = 'sonar-token'
+                        qualityGate(credentialId)
+                    }
+                }
+            }
+        stage('Npm'){
+            when {expression{params.action=='create'}}
+            steps{
+                npmInstall()
+            }
+        }
+    }
+    post{
+        always{
+            echo "Slack Notification"
+            // slackSend(
+            //     channel: '#jenkins',
+            //     color: COLOR_MAP[currentBuild.currentResult],
+            //     message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} \n build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            //     )
+            // }
+        }
+    }
+}
