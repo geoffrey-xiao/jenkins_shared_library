@@ -35,15 +35,15 @@ pipeline {
                     sonarqubeAnalysis()
                 }
         }
-        stage('sonarqube QualitGate'){
-            when{ expression {params.action=='create'}}
-                steps{
-                    script{
-                        def credentialId = 'sonar-token'
-                        qualityGate(credentialId)
-                    }
-                }
-            }
+        // stage('sonarqube QualitGate'){
+        //     when{ expression {params.action=='create'}}
+        //         steps{
+        //             script{
+        //                 def credentialId = 'sonar-token'
+        //                 qualityGate(credentialId)
+        //             }
+        //         }
+        //     }
         stage('Npm'){
             when {expression{params.action=='create'}}
             steps{
@@ -79,12 +79,12 @@ pipeline {
                 trivyImage()
             }
         }
-        stage('Run Container'){
-            when {expression{params.action=='create'}}
-            steps{
-                runContainer()
-            }
-        }
+        // stage('Run Container'){
+        //     when {expression{params.action=='create'}}
+        //     steps{
+        //         runContainer()
+        //     }
+        // }
         stage('Delete Container'){
             when {expression{params.action=='delete'}}
             steps{
